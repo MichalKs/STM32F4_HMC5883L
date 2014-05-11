@@ -19,5 +19,10 @@
 #define HMC5883L_H_
 
 
+#include <stm32f4xx.h>
+
+void HMC5883L_Init(void);
+
+
 
 #endif /* HMC5883L_H_ */
