@@ -25,7 +25,6 @@
 #define HMC5883L_CLK			RCC_AHB1Periph_GPIOB
 #define HMC5883L_I2C			I2C1
 #define HMC5883L_I2C_CLK		RCC_APB1Periph_I2C1
-#define HMC5883L_I2C_CLK_ENA	RCC_APB1PeriphClockCmd(HMC5883L_CLK, ENABLE)
 
 
 #define HMC5883L_ADDR			0x3c ///< Address on I2C bus
@@ -49,8 +48,8 @@
 
 void HMC5883L_Init(void) {
 
-	HMC5883L_I2C_CLK_ENA;
 	RCC_AHB1PeriphClockCmd(HMC5883L_CLK, ENABLE);
+	RCC_APB1PeriphClockCmd(HMC5883L_I2C_CLK, ENABLE);
 
 	// GPIO init
 	GPIO_InitTypeDef  GPIO_InitStructure;
@@ -61,6 +60,9 @@ void HMC5883L_Init(void) {
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	GPIO_Init(HMC5883L_PORT, &GPIO_InitStructure);
+
+	GPIO_PinAFConfig(HMC5883L_PORT, GPIO_PinSource6, GPIO_AF_I2C1); // TODO Add or remove defines
+	GPIO_PinAFConfig(HMC5883L_PORT, GPIO_PinSource7, GPIO_AF_I2C1);
 
 	// I2C init
 	I2C_InitTypeDef I2C_InitStructure;
@@ -131,6 +133,38 @@ uint8_t HMC5883L_Read(uint8_t address) {
 	return ret;
 }
 
+void HMC5883L_Write(uint8_t address, uint8_t data) {
+
+	// Wait while I2C busy
+	while(I2C_GetFlagStatus(HMC5883L_I2C, I2C_FLAG_BUSY));
+
+	// Send start
+	I2C_GenerateSTART(HMC5883L_I2C, ENABLE);
+
+	// Wait for EV5
+	while(!I2C_CheckEvent(HMC5883L_I2C, I2C_EVENT_MASTER_MODE_SELECT));
+
+	// Send HMC5883L address for write
+	I2C_Send7bitAddress(HMC5883L_I2C, HMC5883L_ADDR, I2C_Direction_Transmitter);
+
+	// Wait for EV6
+	while(!I2C_CheckEvent(HMC5883L_I2C, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED));
+
+	// Send register address
+	I2C_SendData(HMC5883L_I2C, address);
+
+	// Wait for EV8
+	while(!I2C_CheckEvent(HMC5883L_I2C, I2C_EVENT_MASTER_BYTE_TRANSMITTED));
+
+	// Send new data
+	I2C_SendData(HMC5883L_I2C, data);
+
+	// Wait for EV8
+	while(!I2C_CheckEvent(HMC5883L_I2C, I2C_EVENT_MASTER_BYTE_TRANSMITTED));
+
+	// Generate stop
+	I2C_GenerateSTOP(HMC5883L_I2C, ENABLE);
+}
 
 
 

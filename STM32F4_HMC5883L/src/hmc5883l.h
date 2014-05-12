@@ -22,6 +22,8 @@
 #include <stm32f4xx.h>
 
 void HMC5883L_Init(void);
+uint8_t HMC5883L_Read(uint8_t address);
+void HMC5883L_Write(uint8_t address, uint8_t data);
 
 
 
