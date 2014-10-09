@@ -19,6 +19,7 @@
 
 #include <stm32f4xx.h>
 #include <stdio.h>
+#include <math.h>
 
 #include "timers.h"
 #include "led.h"
@@ -89,13 +90,27 @@ void softTimerCallback(void) {
 	z = HMC5883L_Read(0x05) << 8;
 	z |= HMC5883L_Read(0x06);
 
-	int8_t x_s = (int8_t) x;
-	int8_t y_s = (int8_t) y;
-	int8_t z_s = (int8_t) z;
+	int16_t x_s = (int16_t) x;
+	int16_t y_s = (int16_t) y;
+	int16_t z_s = (int16_t) z;
 
-	printf("x = %d\r\n",x_s);
-	printf("y = %d\r\n",y_s);
-	printf("z = %d\r\n",z_s);
+//	printf("x = %d ",x_s);
+//	printf("y = %d ",y_s);
+//	printf("z = %d\r\n",z_s);
+
+
+	double direction;
+
+	if (y_s > 0) {
+	  direction = 90.0 - atan((double)x_s/(double)y_s)*180.0/M_PI;
+	} else if (y_s < 0){
+	  direction = 270.0 - atan((double)x_s/(double)y_s)*180.0/M_PI;
+	} else if (y_s == 0 && x_s < 0) {
+	  direction = 180.0;
+	} else {
+	  direction = 0.0;
+	}
+	printf("%.2f\r\n", direction);
 }
 
 
