@@ -26,6 +26,9 @@
 
 #define HMC5883L_ADDR       0x3c ///< Address on I2C bus
 
+/**
+ * @brief Initialize hardware for the digital compass.
+ */
 void HMC5883L_HAL_Init(void) {
 
   RCC_AHB1PeriphClockCmd(HMC5883L_CLK, ENABLE);
@@ -58,7 +61,11 @@ void HMC5883L_HAL_Init(void) {
   I2C_Cmd(HMC5883L_I2C, ENABLE);
 
 }
-
+/**
+ * @brief Read data from the compass on the I2C bus
+ * @param address Address of read
+ * @return Read data
+ */
 uint8_t HMC5883L_HAL_Read(uint8_t address) {
 
   uint8_t ret;
@@ -112,7 +119,11 @@ uint8_t HMC5883L_HAL_Read(uint8_t address) {
 
   return ret;
 }
-
+/**
+ * @brief Write data to the compass on the I2C bus
+ * @param address Address of write
+ * @param data Data to write
+ */
 void HMC5883L_HAL_Write(uint8_t address, uint8_t data) {
 
   // Wait while I2C busy

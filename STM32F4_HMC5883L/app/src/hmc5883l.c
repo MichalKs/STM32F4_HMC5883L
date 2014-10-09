@@ -4,6 +4,12 @@
  * @date: 	11 maj 2014
  * @author: Michal Ksiezopolski
  * 
+ * @details The compass should be held in an ideally
+ * horizontal position to get the bearings right. If not,
+ * the results will be useless garbage.
+ *
+ * TODO Add tilting compensation.
+ *
  * @verbatim
  * Copyright (c) 2014 Michal Ksiezopolski.
  * All rights reserved. This program and the 
@@ -48,23 +54,65 @@
 #define HMC5883L_IDB			    0x0b ///< Identification register B (r)
 #define HMC5883L_IDC			    0x0c ///< Identification register C (r)
 
+/**
+ *
+ */
+typedef enum {
+  HMC6883L_MODE_CONT = 0x00,  //!< HMC6883L_MODE_CONT
+  HMC6883L_MODE_SINGLE = 0x01,//!< HMC6883L_MODE_SINGLE
+  HMC6883L_MODE_IDLE = 0x10,  //!< HMC6883L_MODE_IDLE
+} HMC5883L_Mode_TypeDef;
+/**
+ *
+ */
+typedef enum {
+  HMC6883L_1SAMP = 0x00,//!< HMC6883L_1SAMP
+  HMC6883L_2SAMP = 0x01,//!< HMC6883L_2SAMP
+  HMC6883L_4SAMP = 0x10,//!< HMC6883L_4SAMP
+  HMC6883L_8SAMP = 0x11,//!< HMC6883L_8SAMP
+} HMC5883L_AvgSamples_TypeDef;
+/**
+ *
+ */
+typedef enum {
+  HMC6883L_0Hz75,//!< HMC6883L_0Hz75
+  HMC6883L_1Hz5, //!< HMC6883L_1Hz5
+  HMC6883L_3Hz,  //!< HMC6883L_3Hz
+  HMC6883L_7Hz5, //!< HMC6883L_7Hz5
+  HMC6883L_15,   //!< HMC6883L_15 15 Hz - default value
+  HMC6883L_30,   //!< HMC6883L_30
+  HMC6883L_75,   //!< HMC6883L_75
+} HMC5883L_DataRate_TypeDef;
 
 void HMC5883L_ReadXYZ(int16_t* x_s, int16_t* y_s, int16_t* z_s);
+void HMC5883L_ChangeMode(HMC5883L_Mode_TypeDef mode);
 
+/**
+ * @brief Initialize the digital compass
+ */
 void HMC5883L_Init(void) {
 
   HMC5883L_HAL_Init();
 
-  uint8_t regVal = HMC5883L_HAL_Read(0x0a);
+  // Read id registers and print them out.
+  uint8_t regVal = HMC5883L_HAL_Read(HMC5883L_IDA);
   println("Id A %02x", regVal);
 
-  regVal = HMC5883L_HAL_Read(0x0b);
+  regVal = HMC5883L_HAL_Read(HMC5883L_IDB);
   println("Id B %02x", regVal);
 
-  regVal = HMC5883L_HAL_Read(0x0c);
+  regVal = HMC5883L_HAL_Read(HMC5883L_IDC);
   println("Id C %02x", regVal);
 
-  HMC5883L_HAL_Write(0x02, 0x00); // Continuous mode
+  regVal = HMC5883L_HAL_Read(HMC5883L_STATUS);
+
+  println("Status %02x", regVal);
+
+  // continuous measurement mode
+  HMC5883L_ChangeMode(HMC6883L_MODE_CONT);
+
+
+
 }
 
 /**
@@ -81,6 +129,10 @@ double HMC5883L_ReadAngle(void) {
 
   double direction; // the direction angle
 
+  // These formulas are taken from AN-203 application note
+  // for the Honeywell compass
+  // If the compass is horizontal these formulas actually
+  // work.
   if (y_s > 0) {
     direction = 90.0 - atan((double)x_s/(double)y_s)*180.0/M_PI;
   } else if (y_s < 0){
@@ -94,7 +146,16 @@ double HMC5883L_ReadAngle(void) {
   return direction;
 
 }
-
+/**
+ * @brief Read XYZ readings from the compass.
+ *
+ * @details Check AN-203 for the Honewell compass
+ * to check out what these mean and how they should behave.
+ *
+ * @param x_s
+ * @param y_s
+ * @param z_s
+ */
 void HMC5883L_ReadXYZ(int16_t* x_s, int16_t* y_s, int16_t* z_s) {
 
   uint16_t x, y, z;
@@ -117,5 +178,12 @@ void HMC5883L_ReadXYZ(int16_t* x_s, int16_t* y_s, int16_t* z_s) {
 
 }
 
-
+/**
+ * @brief Change the mode of the compass.
+ * @param mode New mode
+ */
+void HMC5883L_ChangeMode(HMC5883L_Mode_TypeDef mode) {
+  // Mode bits are the two LSB of MODE register
+  HMC5883L_HAL_Write(HMC5883L_MODE, mode & 0x03);
+}
 
