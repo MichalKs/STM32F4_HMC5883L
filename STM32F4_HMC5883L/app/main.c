@@ -64,16 +64,6 @@ int main(void) {
 	KEYS_Init(); // initialize matrix keyboard
 	HMC5883L_Init();
 
-  uint8_t regVal = HMC5883L_Read(0x0a);
-  println("Id A %02x", regVal);
-
-  regVal = HMC5883L_Read(0x0b);
-  println("Id B %02x", regVal);
-
-  regVal = HMC5883L_Read(0x0c);
-  println("Id C %02x", regVal);
-
-  HMC5883L_Write(0x02, 0x00); // Continuous mode
   LCD_Init();
   LCD_Clear();
 
@@ -112,39 +102,12 @@ int main(void) {
  */
 void softTimerCallback(void) {
 
-  uint16_t x, y, z;
 
   LED_Toggle(LED0); // Toggle LED
   //printf("Test string sent from STM32F4!!!\r\n"); // Print test string
-  x = HMC5883L_Read(0x03) << 8;
-  x |= HMC5883L_Read(0x04);
 
-  y = HMC5883L_Read(0x07) << 8;
-  y |= HMC5883L_Read(0x08);
+  double direction = HMC5883L_ReadAngle();
 
-  z = HMC5883L_Read(0x05) << 8;
-  z |= HMC5883L_Read(0x06);
-
-  int16_t x_s = (int16_t) x;
-  int16_t y_s = (int16_t) y;
-//  int16_t z_s = (int16_t) z;
-
-//  printf("x = %d ",x_s);
-//  printf("y = %d ",y_s);
-//  printf("z = %d\r\n",z_s);
-
-
-  double direction;
-
-  if (y_s > 0) {
-    direction = 90.0 - atan((double)x_s/(double)y_s)*180.0/M_PI;
-  } else if (y_s < 0){
-    direction = 270.0 - atan((double)x_s/(double)y_s)*180.0/M_PI;
-  } else if (y_s == 0 && x_s < 0) {
-    direction = 180.0;
-  } else {
-    direction = 0.0;
-  }
   println("%.2f", direction);
 
   char buf[20];

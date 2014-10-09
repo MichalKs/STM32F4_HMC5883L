@@ -1,7 +1,7 @@
 /**
- * @file: 	hmc5883l.h
+ * @file: 	hmc5883l_hal.h
  * @brief:	   
- * @date: 	11 maj 2014
+ * @date: 	9 paź 2014
  * @author: Michal Ksiezopolski
  * 
  * @verbatim
@@ -15,13 +15,11 @@
  * @endverbatim
  */
 
-#ifndef HMC5883L_H_
-#define HMC5883L_H_
+#ifndef HMC5883L_HAL_H_
+#define HMC5883L_HAL_H_
 
+void HMC5883L_HAL_Init(void);
+uint8_t HMC5883L_HAL_Read(uint8_t address);
+void HMC5883L_HAL_Write(uint8_t address, uint8_t data);
 
-#include <inttypes.h>
-
-void HMC5883L_Init(void);
-double HMC5883L_ReadAngle(void);
-
-#endif /* HMC5883L_H_ */
+#endif /* HMC5883L_HAL_H_ */
